@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="fill_parent" android:layout_width="fill_parent"
+	android:scrollbars="none">
+	<RelativeLayout android:layout_height="fill_parent"
+		android:layout_width="fill_parent">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:id="@+id/DeviceText"
+			android:layout_marginLeft="10dip" android:layout_marginTop="10dip"
+			android:layout_marginBottom="5dip" android:text="@string/ethernet_devices"></TextView>
+		<Spinner android:layout_below="@+id/DeviceText"
+			android:layout_height="wrap_content" android:id="@+id/DeviceSpinner"
+			android:layout_width="fill_parent" android:layout_marginRight="10dip"
+			android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="10dip"></Spinner>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:layout_below="@+id/DeviceSpinner"
+			android:layout_alignLeft="@+id/DeviceText" android:id="@+id/ConnectType"
+			android:layout_marginBottom="5dip" android:text="@string/ethernet_connection_type"></TextView>
+		<RadioGroup android:layout_height="wrap_content"
+			android:layout_width="fill_parent" android:id="@+id/RadioGroup"
+			android:layout_below="@+id/ConnectType" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="5dip">
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/DhcpRadio"
+				android:text="@string/ethernet_dhcp"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/StaticRadio"
+				android:text="@string/ethernet_static_ip"></RadioButton>
+		</RadioGroup>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="5dip" android:layout_below="@+id/RadioGroup"
+			android:id="@+id/IPText" android:text="@string/ethernet_ip_address"></TextView>
+
+		<EditText android:layout_height="wrap_content"
+			android:inputType="phone"
+			android:layout_below="@+id/IPText"
+			android:layout_width="fill_parent" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_alignRight="@+id/DeviceSpinner" android:id="@+id/IPEditText"
+			android:hint="Input IP address" android:layout_marginBottom="5dip" ></EditText>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="5dip" android:id="@+id/NetmaskText"
+			android:layout_below="@+id/IPEditText" android:text="@string/ethernet_netmask"></TextView>
+		<EditText android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:inputType="phone"
+			android:layout_alignLeft="@+id/DeviceText" android:layout_alignRight="@+id/DeviceSpinner"
+			android:layout_marginBottom="5dip" android:layout_below="@+id/NetmaskText"
+			android:id="@+id/NetmaskEditText" android:hint="Input netmask" ></EditText>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="5dip" android:id="@+id/GatewayText"
+			android:layout_below="@+id/NetmaskEditText" android:text="@string/ethernet_gateway"></TextView>
+		<EditText android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:inputType="phone"
+			android:layout_alignLeft="@+id/DeviceText" android:layout_alignRight="@+id/DeviceSpinner"
+			android:layout_marginBottom="5dip" android:hint="Input gateway"
+			android:id="@+id/GatewayEditText" android:layout_below="@+id/GatewayText"></EditText>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:layout_alignLeft="@+id/DeviceText"
+			android:layout_marginBottom="5dip" android:id="@+id/DNSText"
+			android:layout_below="@+id/GatewayEditText" android:text="@string/ethernet_dns_address"></TextView>
+		<EditText android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:inputType="phone"
+			android:layout_alignLeft="@+id/DeviceText" android:layout_alignRight="@+id/DeviceSpinner"
+			android:layout_marginBottom="5dip" android:id="@+id/DNSEditText"
+			android:layout_below="@+id/DNSText" android:hint="Input DNS address" ></EditText>
+	</RelativeLayout>
+</ScrollView>

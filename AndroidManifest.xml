@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="com.android.ethernet"
+	android:sharedUserId="android.uid.system">
+	<application android:icon="@drawable/ethernet" android:label="@string/app_name">
+
+		<activity android:name="EthernetSettings" 
+	                android:label="@string/ethernet_settings_title"
+	                android:process="system"
+	                android:writePermission="android.permission.WRITE_SETTINGS"
+	                >
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />	
+			</intent-filter>
+		</activity>
+        
+		<receiver android:name="BootCompletedReceiver"
+				 android:label="@string/ethernet_settings_title"
+				 android:process="system">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED"></action>
+				<category android:name="android.intent.category.HOME"></category>
+			</intent-filter>
+		</receiver>
+
+		<activity android:name="EthernetEnabler" android:label="@string/eth_setting"
+				android:clearTaskOnLaunch="true"
+				>
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.VOICE_LAUNCH" />
+				<category android:name="com.android.settings.SHORTCUT" />
+			</intent-filter>
+		</activity>
+
+		<activity android:name="EthernetConfigure" android:label="@string/eth_conf_perf_title"
+				android:clearTaskOnLaunch="true"
+				>
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.VOICE_LAUNCH" />
+				<category android:name="com.android.settings.SHORTCUT" />
+			</intent-filter>
+		</activity>
+
+	</application>
+
+</manifest> 
