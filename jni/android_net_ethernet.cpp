@@ -275,9 +275,7 @@ static int netlink_init_interfaces_list(void)
 
     if ((netdir = opendir(SYSFS_CLASS_NET)) != NULL) {
         while((de = readdir(netdir))!=NULL) {
-            if ((!strcmp(de->d_name,".")) || (!strcmp(de->d_name,".."))
-                ||(!strcmp(de->d_name,"lo")) || (!strcmp(de->d_name,"wmaster0")) ||
-                (!strcmp(de->d_name,"ra0")))
+            if (strncmp(de->d_name, "eth", 3))
                     continue;
             snprintf(path, SYSFS_PATH_MAX,"%s/%s/phy80211",SYSFS_CLASS_NET,de->d_name);
             if (access(path, F_OK)) {
