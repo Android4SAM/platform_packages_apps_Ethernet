@@ -132,13 +132,13 @@ static jstring android_net_ethernet_waitForEvent(JNIEnv *env,
     unsigned int left;
     interface_info_t *info;
     int len;
-    LOGI("Poll events from ethernet devices");
+    ALOGI("Poll events from ethernet devices");
     /*
     *wait on uevent netlink socket for the ethernet device
     */
     buff = (char *)malloc(NL_POLL_MSG_SZ);
     if (!buff) {
-        LOGE("Allocate poll buffer failed");
+        ALOGE("Allocate poll buffer failed");
         goto error;
     }
 
@@ -153,7 +153,7 @@ static jstring android_net_ethernet_waitForEvent(JNIEnv *env,
     msg.msg_flags =  0;
 
     if((len = recvmsg(nl_socket_poll, &msg, 0))>= 0) {
-        LOGI("recvmsg get data");
+        ALOGI("recvmsg get data");
         result = rbuf;
         left = 4096;
         rbuf[0] = '\0';
@@ -161,18 +161,18 @@ static jstring android_net_ethernet_waitForEvent(JNIEnv *env,
             nh = NLMSG_NEXT (nh, len))
         {
             if (nh->nlmsg_type == NLMSG_DONE){
-                LOGE("Did not find useful eth interface information");
+                ALOGE("Did not find useful eth interface information");
                 goto error;
             }
 
             if (nh->nlmsg_type == NLMSG_ERROR){
                 /* Do some error handling. */
-                LOGE("Read device name failed");
+                ALOGE("Read device name failed");
                 goto error;
             }
-            LOGV(" event :%d  found",nh->nlmsg_type);
+            ALOGV(" event :%d  found",nh->nlmsg_type);
             einfo = (struct ifinfomsg *)NLMSG_DATA(nh);
-            LOGV("the device flag :%X",einfo->ifi_flags);
+            ALOGV("the device flag :%X",einfo->ifi_flags);
             if (nh->nlmsg_type == RTM_DELLINK ||
                 nh->nlmsg_type == RTM_NEWLINK ||
                 nh->nlmsg_type == RTM_DELADDR ||
@@ -195,9 +195,9 @@ static jstring android_net_ethernet_waitForEvent(JNIEnv *env,
                     result =(char *)(result+ strlen(result));
                 }
         }
-        LOGV("Done parsing");
+        ALOGV("Done parsing");
         rbuf[4096 - left] = '\0';
-        LOGV("poll state :%s, left:%d",rbuf, left);
+        ALOGV("poll state :%s, left:%d",rbuf, left);
     }
 
     error:
@@ -246,7 +246,7 @@ static void free_int_list()
     }
     if (total_int != 0 )
     {
-        LOGE("Wrong interface count found");
+        ALOGE("Wrong interface count found");
         total_int = 0;
     }
 }
@@ -291,24 +291,24 @@ static int netlink_init_interfaces_list(void)
                 if(fgets(idx,MAX_FGETS_LEN,ifidx) != NULL) {
                     index = strtoimax(idx,NULL,10);
                 } else {
-                    LOGE("Can not read %s",path);
+                    ALOGE("Can not read %s",path);
                     continue;
                 }
             } else {
-                LOGE("Can not open %s for read",path);
+                ALOGE("Can not open %s for read",path);
                 continue;
             }
             /* make some room! */
             intfinfo = (interface_info_t *)
             malloc(sizeof(struct _interface_info_t));
             if (intfinfo == NULL) {
-                LOGE("malloc in netlink_init_interfaces_table");
+                ALOGE("malloc in netlink_init_interfaces_table");
                 goto error;
             }
             /* copy the interface name (eth0, eth1, ...) */
             intfinfo->name = strndup((char *) de->d_name, SYSFS_PATH_MAX);
             intfinfo->i = index;
-            LOGV("interface %s:%d found",intfinfo->name,intfinfo->i);
+            ALOGV("interface %s:%d found",intfinfo->name,intfinfo->i);
             add_int_to_list(intfinfo);
         }
         closedir(netdir);
@@ -321,7 +321,7 @@ static int netlink_init_interfaces_list(void)
 static void die(const char *s)
 {
     fprintf(stderr,"error: %s (%s)\n", s, strerror(errno));
-    LOGE("ifconfig error");
+    ALOGE("ifconfig error");
 }
 
 static void setflags(int s, struct ifreq *ifr, int set, int clr)
@@ -368,7 +368,7 @@ static jint android_net_ethernet_initEthernetNative(JNIEnv *env,
 {
     int ret = -1;
 
-    LOGV("==>%s",__FUNCTION__);
+    ALOGV("==>%s",__FUNCTION__);
     memset(&addr_msg, 0, sizeof(sockaddr_nl));
     addr_msg.nl_family = AF_NETLINK;
     memset(&addr_poll, 0, sizeof(sockaddr_nl));
@@ -381,36 +381,36 @@ static jint android_net_ethernet_initEthernetNative(JNIEnv *env,
     */
     nl_socket_msg = socket(AF_NETLINK,SOCK_RAW,NETLINK_ROUTE);
     if (nl_socket_msg <= 0) {
-        LOGE("Can not create netlink msg socket");
+        ALOGE("Can not create netlink msg socket");
         goto error;
     }
     if (bind(nl_socket_msg, (struct sockaddr *)(&addr_msg),
         sizeof(struct sockaddr_nl))) {
-        LOGE("Can not bind to netlink msg socket");
+        ALOGE("Can not bind to netlink msg socket");
         goto error;
     }
 
     nl_socket_poll = socket(AF_NETLINK,SOCK_RAW,NETLINK_ROUTE);
     if (nl_socket_poll <= 0) {
-        LOGE("Can not create netlink poll socket");
+        ALOGE("Can not create netlink poll socket");
         goto error;
     }
 
     errno = 0;
     if(bind(nl_socket_poll, (struct sockaddr *)(&addr_poll),
         sizeof(struct sockaddr_nl))) {
-        LOGE("Can not bind to netlink poll socket,%s",strerror(errno));
+        ALOGE("Can not bind to netlink poll socket,%s",strerror(errno));
         goto error;
     }
 
     if ((ret = netlink_init_interfaces_list()) < 0) {
-        LOGE("Can not collect the interface list");
+        ALOGE("Can not collect the interface list");
         goto error;
     }
-    LOGE("%s exited with success",__FUNCTION__);
+    ALOGE("%s exited with success",__FUNCTION__);
     return ret;
     error:
-        LOGE("%s exited with error",__FUNCTION__);
+        ALOGE("%s exited with error",__FUNCTION__);
         if (nl_socket_msg >0)
             close(nl_socket_msg);
         if (nl_socket_poll >0)
@@ -424,20 +424,20 @@ static jstring android_net_ethernet_getInterfaceName(JNIEnv *env,
 {
     int i = 0;
     interface_info_t *info;
-    LOGV("User ask for device name on %d, list:%X, total:%d",index,
+    ALOGV("User ask for device name on %d, list:%X, total:%d",index,
              (unsigned int)interfaces, total_int);
     info = interfaces;
     if (total_int != 0 && index <= (total_int -1)) {
         while (info != NULL) {
         if (index == i) {
-            LOGV("Found :%s",info->name);
+            ALOGV("Found :%s",info->name);
             return env->NewStringUTF(info->name);
         }
         info = info->next;
         i ++;
         }
     }
-    LOGI("No device name found");
+    ALOGI("No device name found");
     return env->NewStringUTF(NULL);
 }
 
@@ -458,7 +458,7 @@ static jboolean android_net_utils_configureInterface(JNIEnv* env,
 		uint32_t lease;
 
 		const char *nameStr = env->GetStringUTFChars(ifname, NULL);
-		LOGE("Here we call ::ifc_configure \
+		ALOGE("Here we call ::ifc_configure \
 				ifname  %s                 \
 				ipaddr  %d                 \
 				mask    %d                 \
@@ -466,7 +466,7 @@ static jboolean android_net_utils_configureInterface(JNIEnv* env,
 				dns1    %d                 \
 				", nameStr, ipaddr, mask, gateway, dns1);
 		result = ::ifc_configure(nameStr, ipaddr, mask, gateway, dns1, dns2);
-		LOGE("::ifc_configure return %d\n", result);
+		ALOGE("::ifc_configure return %d\n", result);
 		env->ReleaseStringUTFChars(ifname, nameStr);
 		return (jboolean)(result == 0);
 }
@@ -511,11 +511,11 @@ static int registerNativeMethods(JNIEnv* env, const char* className,
 
     clazz = env->FindClass(className);
     if (clazz == NULL) {
-        LOGE("Native registration unable to find class '%s'", className);
+        ALOGE("Native registration unable to find class '%s'", className);
         return JNI_FALSE;
     }
     if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
-        LOGE("RegisterNatives failed for '%s'", className);
+        ALOGE("RegisterNatives failed for '%s'", className);
         return JNI_FALSE;
     }
 
@@ -556,16 +556,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
     jint result = -1;
     JNIEnv* env = NULL;
 
-    LOGV("JNI_OnLoad");
+    ALOGV("JNI_OnLoad");
 
     if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK) {
-        LOGE("ERROR: GetEnv failed");
+        ALOGE("ERROR: GetEnv failed");
         goto bail;
     }
     env = uenv.env;
 
     if (registerNatives(env) != JNI_TRUE) {
-        LOGE("ERROR: registerNatives failed");
+        ALOGE("ERROR: registerNatives failed");
         goto bail;
     }
 
