@@ -24,7 +24,7 @@
 #include <android_runtime/AndroidRuntime.h>
 #include <utils/Log.h>
 #include <asm/types.h>
-#include <linux/netlink.h>
+#include "netlink-types.h"
 #include <linux/rtnetlink.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

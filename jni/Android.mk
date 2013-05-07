@@ -40,8 +40,7 @@ LOCAL_STATIC_LIBRARIES :=
 
 # Also need the JNI headers.
 LOCAL_C_INCLUDES += \
-	$(JNI_H_INCLUDE)
-
+	external/libnl-headers
 # No special compiler flags.
 LOCAL_CFLAGS +=
 
