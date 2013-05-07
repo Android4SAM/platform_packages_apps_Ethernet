@@ -70,7 +70,13 @@ public class EthernetDevInfo implements Parcelable {
     }
 
     public String getDnsAddr() {
-        return this.dns;
+
+	String default_dns = "8.8.8.8";
+
+	if (this.dns == null)
+		return default_dns;
+	else
+		return this.dns;
     }
 
     public boolean setConnectMode(String mode) {
