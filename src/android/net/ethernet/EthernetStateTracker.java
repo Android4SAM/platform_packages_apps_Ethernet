@@ -14,6 +14,7 @@ import android.net.NetworkInfo.DetailedState;
 import android.net.NetworkUtils;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.UserHandle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
@@ -488,7 +489,7 @@ public class EthernetStateTracker extends Handler {
     private void sendStickyBroadcast(Intent intent) {
         synchronized (this) {
             intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
-            mContext.sendStickyBroadcast(intent);
+	    mContext.sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
     }
 
