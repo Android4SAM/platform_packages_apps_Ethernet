@@ -23,9 +23,7 @@
             android:summaryOn="@string/eth_toggle_summary_off"
             android:summaryOff="@string/eth_toggle_summary_on"
             android:persistent="false" />
-        <Preference
-            android:title="@string/eth_conf_perf_title"
-            android:summary="@string/eth_conf_summary"
-            android:key="eth_config"
-            android:persistent="false" />
+            
+        <PreferenceCategory android:title="Ethernet devices" 
+        	android:key="device_eth" /> 
 </PreferenceScreen>

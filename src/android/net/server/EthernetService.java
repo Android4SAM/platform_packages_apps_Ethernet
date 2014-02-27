@@ -4,196 +4,106 @@ package android.net.server;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.ethernet.EthernetDevInfo;
-import android.net.ethernet.EthernetManager;
-import android.net.ethernet.EthernetNative;
+
 import android.net.ethernet.EthernetStateTracker;
-import android.net.ethernet.IEthernetManager;
 import android.provider.Settings;
 import android.util.Log;
-
+import android.net.EthernetDataTracker;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import java.net.UnknownHostException;
+import android.os.Process;
+import android.os.Handler;
 
-public class EthernetService<syncronized> extends IEthernetManager.Stub {
+import android.os.INetworkManagementService;
+
+import android.os.RemoteException;
+
+public class EthernetService {
 
     private static final String TAG = "EthernetService";
 
     private Context mContext;
     private EthernetStateTracker mStateTracker;
-    private String[] DevName;
+    private INetworkManagementService mNMService;
     private int isEthEnabled;
-    private int mEthState = EthernetManager.ETH_STATE_DISABLED;
+    private int mEthState = ETH_STATE_DISABLED;
+    private EthernetDataTracker mDataTracker;
+    private static EthernetService sInstance;
+
+
+    public static final String ETH_STATE_CHANGED_ACTION =
+        "android.net.ethernet.ETH_STATE_CHANGED";
+
+    public static final String NETWORK_STATE_CHANGED_ACTION =
+        "android.net.ethernet.STATE_CHANGE";
+
+    public static final String EXTRA_NETWORK_INFO = "networkInfo";
+    public static final String EXTRA_ETH_STATE = "eth_state";
+    public static final String EXTRA_PREVIOUS_ETH_STATE = "previous_eth_state";
+
+    public static final int ETH_STATE_DISABLED = 0;
+    public static final int ETH_STATE_ENABLED = 1;
+    public static final int ETH_STATE_UNKNOWN = 2;
 
     public static final String ETH_ON = "eth_on";
-    public static final String ETH_MODE = "eth_mode";
-    public static final String ETH_IP = "eth_ip";
-    public static final String ETH_MASK = "eth_mask";
-    public static final String ETH_DNS = "eth_dns";
-    public static final String ETH_ROUTE = "eth_route";
-    public static final String ETH_CONF = "eth_conf";
-    public static final String ETH_IFNAME = "eth_ifname";
 
-    public EthernetService(Context context, EthernetStateTracker mTrack) {
-
+    public EthernetService(Context context, EthernetStateTracker mTrack, EthernetDataTracker  eTrack) {
         mContext = context;
         mStateTracker = mTrack;
-
+        mDataTracker = eTrack;
         isEthEnabled = getPersistedState();
-
+		mStateTracker.setUserFlag(isEthEnabled == 0 ? false : true);
         Log.i(TAG, "Ethernet dev enabled " + isEthEnabled);
-
     }
 
     public void Init() {
-
-        if (getDeviceNameList() == null) {
-            Log.e(TAG, "No ethernet device detected.We will return!!!");
-            return;
-        }
-
-        // mStateTracker.SetInterfaceName(DevName[0]);
-
-        if (!isEthConfigured()) {
-            // If user did not configure any interfaces yet, pick the first one
-            // and enable it.
-            setEthMode(EthernetDevInfo.ETH_CONN_MODE_DHCP);
-        }
-
-        Log.i(TAG, "Trigger the ethernet monitor");
+        Log.e("getpid", "Ethernet service pid: " + Process.myPid());
         mStateTracker.StartPolling();
+		mDataTracker.clearConnections();
+		mDataTracker.scanInterface();
+		Log.d("ethapp", "clear connections and scan interface");
     }
 
-    public boolean isEthConfigured() {
-
-        final ContentResolver cr = mContext.getContentResolver();
-        int x = Settings.Secure.getInt(cr, ETH_CONF, 0);
-
-        if (x == 1)
-            return true;
-        return false;
+	public static void setInstance(EthernetService service) {
+		sInstance = service;
+	}
+    public static EthernetService getInstance() {
+        return sInstance;
     }
 
-    public synchronized EthernetDevInfo getSavedEthConfig() {
-
-        if (isEthConfigured()) {
-
-            final ContentResolver cr = mContext.getContentResolver();
-            EthernetDevInfo info = new EthernetDevInfo();
-            info.setConnectMode(Settings.Secure.getString(cr, ETH_MODE));
-            info.setIfName(Settings.Secure.getString(cr, ETH_IFNAME));
-            info.setIpAddress(Settings.Secure.getString(cr, ETH_IP));
-            info.setDnsAddr(Settings.Secure.getString(cr, ETH_DNS));
-            info.setNetMask(Settings.Secure.getString(cr, ETH_MASK));
-            info.setRouteAddr(Settings.Secure.getString(cr, ETH_ROUTE));
-
-            return info;
-        }
-        return null;
-    }
-
-    public synchronized void setEthMode(String mode) {
-
-        final ContentResolver cr = mContext.getContentResolver();
-
-        if (DevName != null) {
-            Settings.Secure.putString(cr, ETH_IFNAME, DevName[0]);
-            Settings.Secure.putInt(cr, ETH_CONF, 1);
-            Settings.Secure.putString(cr, ETH_MODE, mode);
-        }
-    }
-
-    public synchronized void UpdateEthDevInfo(EthernetDevInfo info) {
-
-        final ContentResolver cr = mContext.getContentResolver();
-        Settings.Secure.putInt(cr, ETH_CONF, 1);
-        Settings.Secure.putString(cr, ETH_IFNAME, info.getIfName());
-        Settings.Secure.putString(cr, ETH_IP, info.getIpAddress());
-        Settings.Secure.putString(cr, ETH_MODE, info.getConnectMode());
-        Settings.Secure.putString(cr, ETH_DNS, info.getDnsAddr());
-        Settings.Secure.putString(cr, ETH_ROUTE, info.getRouteAddr());
-        Settings.Secure.putString(cr, ETH_MASK, info.getNetMask());
-        if (mEthState == EthernetManager.ETH_STATE_ENABLED) {
-            try {
-                mStateTracker.resetInterface();
-            } catch (UnknownHostException e) {
-                Log.e(TAG, "Wrong ethernet configuration");
-            }
-
-        }
-
-    }
-
-    public int getTotalInterface() {
-
-        return EthernetNative.getInterfaceCnt();
-    }
-
-    private int scanEthDevice() {
-        int i = 0, j;
-        if ((i = EthernetNative.getInterfaceCnt()) != 0) {
-            Log.i(TAG, "total found " + i + " net devices");
-            DevName = new String[i];
-        }
-        else
-            return i;
-
-        for (j = 0; j < i; j++) {
-            DevName[j] = EthernetNative.getInterfaceName(j);
-            if (DevName[j] == null)
-                break;
-            Log.i(TAG, "device " + j + " name " + DevName[j]);
-        }
-
-        return i;
-    }
-
-    public String[] getDeviceNameList() {
-        if (scanEthDevice() > 0)
-            return DevName;
-        else
-            return null;
+	public void setStateHandler(Handler handler) {
+		mStateTracker.setHandler(handler);
+	}
+	
+    public EthernetStateTracker getStateTracker() {
+        return mStateTracker;
     }
 
     private int getPersistedState() {
-
         final ContentResolver cr = mContext.getContentResolver();
-
         int i = Settings.Secure.getInt(cr, ETH_ON, 1);
         mEthState = i;
-        mStateTracker.SetInterfaceState(i);
         return i;
     }
 
     private synchronized void persistEthEnabled(boolean enabled) {
-
         final ContentResolver cr = mContext.getContentResolver();
         Settings.Secure.putInt(cr, ETH_ON,
-                enabled ? EthernetManager.ETH_STATE_ENABLED : EthernetManager.ETH_STATE_DISABLED);
-        mStateTracker.SetInterfaceState(enabled ? EthernetManager.ETH_STATE_ENABLED
-                : EthernetManager.ETH_STATE_DISABLED);
+                               enabled ? ETH_STATE_ENABLED : ETH_STATE_DISABLED);
     }
 
     public synchronized void setEthState(int state) {
         Log.i(TAG, "setEthState from " + mEthState + " to " + state);
-
-        if (mEthState != state) {
+		mStateTracker.setUserFlag(state == 0 ? false : true);
+        if(mEthState != state) {
             mEthState = state;
-            if (state == EthernetManager.ETH_STATE_DISABLED) {
+            if(state == 0) {
                 persistEthEnabled(false);
                 mStateTracker.stopInterface(false);
             } else {
                 persistEthEnabled(true);
-                if (!isEthConfigured()) {
-                    // If user did not configure any interfaces yet, pick the
-                    // first one
-                    // and enable it.
-                    setEthMode(EthernetDevInfo.ETH_CONN_MODE_DHCP);
-                }
-                try {
-                    mStateTracker.resetInterface();
-                } catch (UnknownHostException e) {
-                    Log.e(TAG, "Wrong ethernet configuration");
-                }
-
+				mDataTracker.reconnect();
             }
         }
     }
@@ -201,5 +111,4 @@ public class EthernetService<syncronized> extends IEthernetManager.Stub {
     public int getEthState() {
         return mEthState;
     }
-
 }

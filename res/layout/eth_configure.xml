@@ -16,20 +16,6 @@
                 android:orientation="vertical">
             </LinearLayout>
 
-       <!-- Device list -->
-
-        <TextView android:id="@+id/eth_dev_list_text"
-                style="?android:attr/textAppearanceSmallInverse"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dip"
-                android:text="@string/eth_dev_list" />
-
-        <!-- The entries will be set programmatically -->
-        <Spinner android:id="@+id/eth_dev_spinner"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" />
-
         <!-- Connection type -->
 	<TextView android:id="@+id/eth_con_type"
                 style="?android:attr/textAppearanceSmallInverse"

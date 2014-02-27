@@ -3,106 +3,58 @@ package android.net.ethernet;
 
 import android.net.NetworkInfo;
 import android.util.Log;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.provider.Settings;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
+import android.net.EthernetDataTracker;
 
 public class EthernetMonitor {
     private static final String TAG = "EthernetMonitor";
-    private static final int CONNECTED = 1;
-    private static final int DISCONNECTED = 2;
-    private static final int PHYUP = 3;
-    private static final String connectedEvent = "CONNECTED";
-    private static final String disconnectedEvent = "DISCONNECTED";
-    private static final int ADD_ADDR = 20;
-    private static final int RM_ADDR = 21;
-    private static final int NEW_LINK = 16;
-    private static final int DEL_LINK = 17;
+    private static final int ETHER_CONNECTED_FAILED = 5;
+    private static final int ETHER_CABLE_NOT_PLUG_IN = 4;
+    private static final int ETHER_CONNECTED_SUCCESS = 3;
+    private final Context mContext;
+    private static EthernetStateTracker mTracker;
+    private EthernetDataTracker mDataTracker;
+    private NetStateHandler sInstance;
+    private static HandlerThread NetStateThread ;
 
-    private EthernetStateTracker mTracker;
-
-    public EthernetMonitor(EthernetStateTracker tracker) {
+    public EthernetMonitor(Context context, EthernetStateTracker tracker, EthernetDataTracker DataTracker) {
+        mContext = context;
+        mDataTracker = DataTracker;
         mTracker = tracker;
     }
 
+    public  synchronized NetStateHandler getHandlerTarget() {
+        if(sInstance == null) sInstance = new NetStateHandler(NetStateThread.getLooper(), mTracker);
+        return sInstance;
+    }
+
+
+
+    private class NetStateHandler extends Handler {
+        public NetStateHandler(Looper looper, EthernetStateTracker target) {
+            super(looper);
+        }
+
+        public void handleMessage(Message msg) {
+            mTracker.handleMessage(msg);
+        }
+
+    };
+
+
     public void startMonitoring() {
-        new MonitorThread().start();
+        NetStateThread = new HandlerThread("NetState Handler Thread");
+        NetStateThread.start();
+        getHandlerTarget();
+        mDataTracker.setHandler(sInstance);
     }
-
-    class MonitorThread extends Thread {
-
-        public MonitorThread() {
-            super("EthMonitor");
-        }
-
-        public void run() {
-            int index;
-            int i;
-            // noinspection InfiniteLoopStatement
-            for (;;) {
-                Log.i(TAG, "go poll events");
-
-                String eventName = EthernetNative.waitForEvent();
-
-                if (eventName == null) {
-                    continue;
-                }
-
-                Log.i(TAG, "get event " + eventName);
-
-                /*
-                 * Map event name into event enum
-                 */
-
-                String[] events = eventName.split(":");
-
-                index = events.length;
-
-                if (index < 2)
-                    continue;
-                i = 0;
-
-                while (index != 0 && i < index - 1) {
-                    int event = 0;
-                    Log.i(TAG, "dev: " + events[i] + " ev " + events[i + 1]);
-                    int cmd = Integer.parseInt(events[i + 1]);
-                    if (cmd == DEL_LINK) {
-                        event = DISCONNECTED;
-                        handleEvent(events[i], event);
-                    }
-                    else if (cmd == ADD_ADDR) {
-                        event = CONNECTED;
-                        handleEvent(events[i], event);
-                    } else if (cmd == NEW_LINK) {
-                        event = PHYUP;
-                        handleEvent(events[i], event);
-                    }
-                    i = i + 2;
-                }
-            }
-        }
-
-        /**
-         * Handle all supplicant events except STATE-CHANGE
-         * 
-         * @param event the event type
-         * @param remainder the rest of the string following the event name and
-         *            &quot;&#8195;&#8212;&#8195;&quot;
-         */
-        void handleEvent(String ifname, int event) {
-            Log.e(TAG, "Handle event" + ifname);
-            switch (event) {
-                case DISCONNECTED:
-                    mTracker.notifyStateChange(ifname, NetworkInfo.DetailedState.DISCONNECTED);
-                    break;
-                case CONNECTED:
-                    mTracker.notifyStateChange(ifname, NetworkInfo.DetailedState.CONNECTED);
-                    break;
-                case PHYUP:
-                    mTracker.notifyPhyConnected(ifname);
-                    break;
-                default:
-                    mTracker.notifyStateChange(ifname, NetworkInfo.DetailedState.FAILED);
-            }
-        }
-
-    }
-
 }
+
