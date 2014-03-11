@@ -270,6 +270,7 @@ public class EthernetStateTracker extends Handler {
 
 	public void setUserFlag(boolean flag) {
 		mInterfaceStopped = (flag == false ? true : false);
+		postNotification();
 		mDataTracker.setUserFlag(flag);
 	}
 	
