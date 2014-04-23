@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
-import android.net.DhcpInfoInternal;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.DetailedState;
 import android.net.NetworkUtils;
@@ -72,7 +71,6 @@ public class EthernetStateTracker extends Handler {
     private boolean mInterfaceStopped;
     private boolean mGetingIp;
     private String mInterfaceName;
-    private DhcpInfoInternal mDhcpInfoInternal;
     private DhcpInfo mDhcpInfo;
     private EthernetMonitor mMonitor;
     private String[] sDnsPropNames;
